@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <title>IA Hacker - Sinais Ao Vivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c, #1a1a1a);
+            color: white;
+            min-height: 100vh;
+            padding: 15px;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            padding: 15px 0;
+        }
+        .header img {
+            width: 180px;
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+            border: 2px solid #333;
+        }
+        .status-online {
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        .status-offline {
+            border-color: #ff0000;
+            background: rgba(255, 0, 0, 0.1);
+        }
+        .status-sinal {
+            border-color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+            animation: pulse 2s infinite;
+        }
+        .status-win {
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.2);
+        }
+        .status-loss {
+            border-color: #ff0000;
+            background: rgba(255, 0, 0, 0.2);
+        }
+        @keyframes pulse {
+            0% { border-color: #ffff00; }
+            50% { border-color: #ffaa00; }
+            100% { border-color: #ffff00; }
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+        .card h3 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        .card-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        /* PLACAR DETALHADO */
+        .placar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .placar-item {
+            text-align: center;
+            padding: 12px 5px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+        .placar-item.win-primeira {
+            border: 2px solid #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        .placar-item.win-gale1 {
+            border: 2px solid #00cc00;
+            background: rgba(0, 204, 0, 0.1);
+        }
+        .placar-item.win-gale2 {
+            border: 2px solid #009900;
+            background: rgba(0, 153, 0, 0.1);
+        }
+        .placar-item.win-branco {
+            border: 2px solid #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .placar-item.loss {
+            border: 2px solid #ff0000;
+            background: rgba(255, 0, 0, 0.1);
+        }
+        .placar-emoji {
+            font-size: 1.2em;
+            margin-bottom: 3px;
+        }
+        .placar-valor {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 3px 0;
+        }
+        .placar-label {
+            font-size: 0.7em;
+            opacity: 0.8;
+        }
+        .placar-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            font-size: 0.75em;
+        }
+        
+        .sinal-container {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00ff00;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+            animation: sinalPulse 2s infinite;
+        }
+        .sinal-win {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+        }
+        .sinal-loss {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: #ff0000;
+        }
+        @keyframes sinalPulse {
+            0% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.8); }
+            100% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); }
+        }
+        .sinal-ativo {
+            display: block;
+        }
+        .sinal-titulo {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #ff0000;
+        }
+        .sinal-entrada {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin: 15px 0;
+            line-height: 1.4;
+        }
+        .sinal-padrao {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #00ff00;
+        }
+        .sinal-info {
+            font-size: 1.1em;
+            margin: 8px 0;
+        }
+        .sinal-resultado {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .resultado-win {
+            background: #00ff00;
+            color: black;
+        }
+        .resultado-loss {
+            background: #ff0000;
+            color: white;
+        }
+        .martingale-badge {
+            background: #ff9900;
+            color: black;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-left: 8px;
+        }
+        .ultimos-resultados {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 15px;
+            margin: 15px 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+        }
+        .resultado-item {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+            font-size: 1.2em;
+        }
+        .vermelho { background: #dc3545; }
+        .preto { background: #212529; }
+        .branco { 
+            background: #f8f9fa; 
+            color: black; 
+            border: 2px solid #ccc; 
+        }
+        .btn {
+            background: linear-gradient(45deg, #ff0000, #ff6b6b);
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .navigation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            background: #000;
+            border-top: 2px solid red;
+            padding: 10px 0;
+        }
+        .nav-button {
+            flex: 1;
+            text-align: center;
+            color: #ccc;
+            text-decoration: none;
+            font-size: 0.8em;
+            padding: 8px;
+        }
+        .nav-button i {
+            display: block;
+            font-size: 1.2em;
+            margin-bottom: 4px;
+        }
+        
+        /* HISTÓRICO COM CORES */
+        .historico-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border-left: 4px solid #333;
+        }
+        .historico-info {
+            flex: 1;
+        }
+        .historico-resultado {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cor-sinal {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .cor-preto { background: #212529; }
+        .cor-vermelho { background: #dc3545; }
+        .cor-branco { 
+            background: #f8f9fa; 
+            color: black;
+            border: 2px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://iahacker.pro/logo1.png" alt="IA Hacker">
+        </div>
+
+        <div class="status-card" id="statusCard">
+            <div class="spinner"></div>
+            <div class="status-text">INICIANDO SISTEMA...</div>
+            <div id="statusTime">--:--:--</div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>🎯 STATUS</h3>
+                <div class="card-value" id="statusRobo">OFFLINE</div>
+                <div>Robô</div>
+            </div>
+            <div class="card">
+                <h3>⏰ HORÁRIO</h3>
+                <div class="card-value" id="horaAtual">--:--:--</div>
+                <div>Atual</div>
+            </div>
+            <div class="card">
+                <h3>📊 SINAIS</h3>
+                <div class="card-value" id="sinaisHoje">0</div>
+                <div>Hoje</div>
+            </div>
+            <div class="card">
+                <h3>🔄 ATUALIZAÇÃO</h3>
+                <div class="card-value" id="ultimaAtualizacao">--:--:--</div>
+                <div>Última</div>
+            </div>
+        </div>
+
+        <!-- PLACAR DETALHADO -->
+        <div class="card">
+            <h3>📊 PLACAR DETALHADO</h3>
+            <div class="placar-grid">
+                <div class="placar-item win-primeira">
+                    <div class="placar-emoji">✅</div>
+                    <div class="placar-valor" id="placarWinPrimeira">0</div>
+                    <div class="placar-label">1ª Entrada</div>
+                </div>
+                <div class="placar-item win-gale1">
+                    <div class="placar-emoji">🔄</div>
+                    <div class="placar-valor" id="placarWinGale1">0</div>
+                    <div class="placar-label">Gale 1</div>
+                </div>
+                <div class="placar-item win-gale2">
+                    <div class="placar-emoji">🔄🔄</div>
+                    <div class="placar-valor" id="placarWinGale2">0</div>
+                    <div class="placar-label">Gale 2</div>
+                </div>
+                <div class="placar-item win-branco">
+                    <div class="placar-emoji">⚪️</div>
+                    <div class="placar-valor" id="placarWinBranco">0</div>
+                    <div class="placar-label">Branco</div>
+                </div>
+                <div class="placar-item loss">
+                    <div class="placar-emoji">❌</div>
+                    <div class="placar-valor" id="placarLoss">0</div>
+                    <div class="placar-label">Loss</div>
+                </div>
+            </div>
+            <div class="placar-stats">
+                <div class="stat-item">
+                    <span>🔥 Consecutivas:</span>
+                    <strong id="placarConsecutivas">0</strong>
+                </div>
+                <div class="stat-item">
+                    <span>📊 Assertividade:</span>
+                    <strong id="placarAssertividade">0%</strong>
+                </div>
+                <div class="stat-item">
+                    <span>🏆 Máximo:</span>
+                    <strong id="placarMaximo">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- SINAL ATIVO -->
+        <div class="sinal-container" id="sinalContainer">
+            <div class="sinal-titulo">🚨 SINAL ENCONTRADO 🚨</div>
+            <div class="sinal-entrada" id="sinalEntrada">
+                🎯 AGUARDANDO SINAL
+            </div>
+            <div class="sinal-padrao" id="sinalPadrao">---</div>
+            
+            <!-- RESULTADO -->
+            <div id="sinalResultado" style="display: none;">
+                <div class="sinal-resultado" id="resultadoTexto">---</div>
+            </div>
+            
+            <div class="sinal-info">
+                <div>⏰ Horário: <span id="sinalHora">--:--:--</span></div>
+                <div>🎯 Padrão: <span id="sinalTipo">---</span></div>
+                <div>⚡ Martingale: <span id="sinalMartingale">0</span>/2</div>
+                <div>🦾 Proteger no: ⚪️</div>
+                <div>📊 Status: <span id="sinalStatus">AGUARDANDO</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🎰 ÚLTIMOS RESULTADOS</h3>
+            <div class="ultimos-resultados" id="ultimosResultados">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Carregando...
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTÓRICO DE SINAIS -->
+        <div class="card">
+            <h3>📋 HISTÓRICO DE SINAIS</h3>
+            <div id="historicoSinais">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Carregando histórico...
+                </div>
+            </div>
+        </div>
+
+        <button class="btn" id="btnAtualizar">
+            <i class="fas fa-sync-alt"></i> ATUALIZAR SINAIS
+        </button>
+
+        <div style="height: 80px;"></div>
+    </div>
+
+    <div class="navigation">
+        <a href="#" class="nav-button">
+            <i class="fas fa-home"></i>
+            <span>Início</span>
+        </a>
+        <a href="#" class="nav-button">
+            <i class="fas fa-history"></i>
+            <span>Histórico</span>
+        </a>
+        <a href="#" class="nav-button">
+            <i class="fas fa-cog"></i>
+            <span>Config</span>
+        </a>
+    </div>
+
+    <script>
+        // ⚠️ IMPORTANTE: URL atualizada para funcionar no Render.com
+        const API_URL = '/api';
+        
+        let estado = {
+            online: false,
+            sinalAtivo: false,
+            ultimoSinal: null,
+            placar: {
+                win_primeira: 0,
+                win_gale1: 0,
+                win_gale2: 0,
+                win_branco: 0,
+                loss: 0,
+                consecutivas: 0,
+                max_consecutivas: 0,
+                sinais_hoje: 0
+            }
+        };
+
+        // Elementos
+        const elements = {
+            statusCard: document.getElementById('statusCard'),
+            statusRobo: document.getElementById('statusRobo'),
+            statusTime: document.getElementById('statusTime'),
+            horaAtual: document.getElementById('horaAtual'),
+            sinaisHoje: document.getElementById('sinaisHoje'),
+            ultimaAtualizacao: document.getElementById('ultimaAtualizacao'),
+            sinalContainer: document.getElementById('sinalContainer'),
+            sinalEntrada: document.getElementById('sinalEntrada'),
+            sinalPadrao: document.getElementById('sinalPadrao'),
+            sinalHora: document.getElementById('sinalHora'),
+            sinalTipo: document.getElementById('sinalTipo'),
+            sinalMartingale: document.getElementById('sinalMartingale'),
+            sinalStatus: document.getElementById('sinalStatus'),
+            sinalResultado: document.getElementById('sinalResultado'),
+            resultadoTexto: document.getElementById('resultadoTexto'),
+            ultimosResultados: document.getElementById('ultimosResultados'),
+            historicoSinais: document.getElementById('historicoSinais'),
+            btnAtualizar: document.getElementById('btnAtualizar'),
+            placarWinPrimeira: document.getElementById('placarWinPrimeira'),
+            placarWinGale1: document.getElementById('placarWinGale1'),
+            placarWinGale2: document.getElementById('placarWinGale2'),
+            placarWinBranco: document.getElementById('placarWinBranco'),
+            placarLoss: document.getElementById('placarLoss'),
+            placarConsecutivas: document.getElementById('placarConsecutivas'),
+            placarAssertividade: document.getElementById('placarAssertividade'),
+            placarMaximo: document.getElementById('placarMaximo')
+        };
+
+        // Atualizar horário
+        function atualizarHorario() {
+            const agora = new Date();
+            elements.horaAtual.textContent = agora.toLocaleTimeString('pt-BR');
+        }
+        setInterval(atualizarHorario, 1000);
+        atualizarHorario();
+
+        // Buscar status
+        async function buscarStatus() {
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                const data = await response.json();
+                
+                estado.online = data.online;
+                estado.sinalAtivo = data.sinal_ativo;
+                estado.ultimoSinal = data.ultimo_sinal;
+                estado.placar = data.placar || estado.placar;
+                
+                atualizarInterface(data);
+                return true;
+            } catch (error) {
+                console.error('Erro:', error);
+                estado.online = false;
+                atualizarInterface();
+                return false;
+            }
+        }
+
+        // Buscar histórico de sinais
+        async function buscarHistoricoSinais() {
+            try {
+                const response = await fetch(`${API_URL}/historico_sinais`);
+                const historico = await response.json();
+                
+                atualizarHistorico(historico);
+            } catch (error) {
+                elements.historicoSinais.innerHTML = '<div style="color: #ff6b6b; text-align: center;">Erro ao carregar histórico</div>';
+            }
+        }
+
+        // Buscar resultados
+        async function buscarResultados() {
+            try {
+                const response = await fetch(`${API_URL}/ultimos_resultados`);
+                const resultados = await response.json();
+                
+                elements.ultimosResultados.innerHTML = '';
+                resultados.forEach(resultado => {
+                    const div = document.createElement('div');
+                    div.className = `resultado-item ${resultado.cor === 'V' ? 'vermelho' : resultado.cor === 'P' ? 'preto' : 'branco'}`;
+                    div.innerHTML = resultado.emoji;
+                    div.title = `Nº ${resultado.numero} - ${resultado.hora}`;
+                    elements.ultimosResultados.appendChild(div);
+                });
+            } catch (error) {
+                elements.ultimosResultados.innerHTML = '<div style="color: #ff6b6b;">Erro ao carregar</div>';
+            }
+        }
+
+        // Atualizar placar
+        function atualizarPlacar(placarData) {
+            if (!placarData) return;
+            
+            elements.placarWinPrimeira.textContent = placarData.win_primeira || 0;
+            elements.placarWinGale1.textContent = placarData.win_gale1 || 0;
+            elements.placarWinGale2.textContent = placarData.win_gale2 || 0;
+            elements.placarWinBranco.textContent = placarData.win_branco || 0;
+            elements.placarLoss.textContent = placarData.loss || 0;
+            elements.placarConsecutivas.textContent = placarData.consecutivas || 0;
+            elements.placarMaximo.textContent = placarData.max_consecutivas || 0;
+            elements.sinaisHoje.textContent = placarData.sinais_hoje || 0;
+            
+            // Calcular assertividade
+            const total = (placarData.win_primeira || 0) + (placarData.win_gale1 || 0) + 
+                         (placarData.win_gale2 || 0) + (placarData.win_branco || 0) + (placarData.loss || 0);
+            const wins = (placarData.win_primeira || 0) + (placarData.win_gale1 || 0) + 
+                        (placarData.win_gale2 || 0) + (placarData.win_branco || 0);
+            const assertividade = total > 0 ? (wins / total * 100).toFixed(2) : 0;
+            elements.placarAssertividade.textContent = `${assertividade}%`;
+        }
+
+        // Atualizar histórico na interface
+        function atualizarHistorico(historico) {
+            if (!historico || historico.length === 0) {
+                elements.historicoSinais.innerHTML = '<div style="text-align: center; opacity: 0.7;">Nenhum sinal no histórico</div>';
+                return;
+            }
+            
+            let html = '';
+            historico.slice(-8).reverse().forEach(sinal => {
+                const resultado = sinal.resultado;
+                const martingale = sinal.martingale || 0;
+                
+                let resultadoClass = '';
+                let resultadoText = '⏳ ATIVO';
+                let resultadoColor = '';
+                
+                if (resultado) {
+                    if (resultado.includes('WIN')) {
+                        resultadoClass = 'resultado-win';
+                        if (resultado.includes('PRIMEIRA')) resultadoText = '✅ 1ª';
+                        else if (resultado.includes('GALE1')) resultadoText = '🔄 G1';
+                        else if (resultado.includes('GALE2')) resultadoText = '🔄🔄 G2';
+                        else if (resultado.includes('BRANCO')) resultadoText = '⚪️ BRANCO';
+                        else resultadoText = '✅ WIN';
+                    } else if (resultado === 'LOSS') {
+                        resultadoClass = 'resultado-loss';
+                        resultadoText = '❌ LOSS';
+                    }
+                }
+                
+                const martingaleBadge = martingale > 0 ? `<span class="martingale-badge">G${martingale}</span>` : '';
+                
+                // Determinar cor do sinal para mostrar no histórico
+                let corClass = 'cor-preto';
+                let corEmoji = '⚫️';
+                if (sinal.cor === '🛑') {
+                    corClass = 'cor-vermelho';
+                    corEmoji = '🔴';
+                } else if (sinal.cor === '⚪️') {
+                    corClass = 'cor-branco';
+                    corEmoji = '⚪️';
+                }
+                
+                html += `
+                    <div class="historico-item">
+                        <div class="historico-info">
+                            <strong>${sinal.padrao}</strong>
+                            <div style="font-size: 0.8em; opacity: 0.8;">${sinal.timestamp}</div>
+                        </div>
+                        <div class="historico-resultado">
+                            <div class="cor-sinal ${corClass}">${corEmoji}</div>
+                            <div class="sinal-resultado ${resultadoClass}">${resultadoText}</div>
+                            ${martingaleBadge}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            elements.historicoSinais.innerHTML = html;
+        }
+
+        // Atualizar interface principal
+        function atualizarInterface(data) {
+            // Status principal
+            if (estado.online) {
+                elements.statusCard.className = 'status-card status-online';
+                elements.statusRobo.textContent = 'ONLINE';
+                elements.statusRobo.style.color = '#00ff00';
+                elements.statusTime.textContent = data.ultima_atualizacao || '--:--:--';
+                elements.ultimaAtualizacao.textContent = data.ultima_atualizacao || '--:--:--';
+                
+                // Atualizar placar
+                if (data.placar) {
+                    atualizarPlacar(data.placar);
+                }
+            } else {
+                elements.statusCard.className = 'status-card status-offline';
+                elements.statusRobo.textContent = 'OFFLINE';
+                elements.statusRobo.style.color = '#ff0000';
+                elements.statusTime.textContent = 'SISTEMA OFFLINE';
+            }
+
+            // Sinal ativo
+            if (estado.sinalAtivo && estado.ultimoSinal) {
+                elements.sinalContainer.classList.add('sinal-ativo');
+                elements.sinalContainer.classList.remove('sinal-win', 'sinal-loss');
+                
+                const sinal = estado.ultimoSinal;
+                elements.sinalEntrada.innerHTML = `💶 ENTRAR NO<br><strong style="font-size: 1.3em;">${sinal.cor}</strong>`;
+                elements.sinalPadrao.textContent = sinal.padrao;
+                elements.sinalHora.textContent = sinal.timestamp;
+                elements.sinalTipo.textContent = sinal.padrao;
+                elements.sinalMartingale.textContent = sinal.martingale || 0;
+                
+                if (sinal.resultado) {
+                    elements.sinalResultado.style.display = 'block';
+                    if (sinal.resultado.includes('WIN')) {
+                        elements.resultadoTexto.textContent = '✅ WIN';
+                        elements.resultadoTexto.className = 'sinal-resultado resultado-win';
+                        elements.sinalContainer.classList.add('sinal-win');
+                    } else if (sinal.resultado === 'LOSS') {
+                        elements.resultadoTexto.textContent = '❌ LOSS';
+                        elements.resultadoTexto.className = 'sinal-resultado resultado-loss';
+                        elements.sinalContainer.classList.add('sinal-loss');
+                    }
+                    elements.sinalStatus.textContent = 'FINALIZADO';
+                } else {
+                    elements.sinalResultado.style.display = 'none';
+                    elements.sinalStatus.textContent = 'AGUARDANDO RESULTADO';
+                }
+            } else {
+                elements.sinalContainer.classList.remove('sinal-ativo', 'sinal-win', 'sinal-loss');
+            }
+        }
+
+        // Event Listeners
+        elements.btnAtualizar.addEventListener('click', () => {
+            elements.btnAtualizar.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> ATUALIZANDO...';
+            Promise.all([
+                buscarStatus(),
+                buscarResultados(),
+                buscarHistoricoSinais()
+            ]).then(() => {
+                elements.btnAtualizar.innerHTML = '<i class="fas fa-sync-alt"></i> ATUALIZAR SINAIS';
+            });
+        });
+
+        // Inicialização
+        async function inicializar() {
+            await buscarStatus();
+            await buscarResultados();
+            await buscarHistoricoSinais();
+            
+            // Atualizar a cada 5 segundos
+            setInterval(buscarStatus, 5000);
+            setInterval(buscarResultados, 10000);
+            setInterval(buscarHistoricoSinais, 15000);
+        }
+
+        // Iniciar
+        inicializar();
+    </script>
+</body>
+</html>
